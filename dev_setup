@@ -9,16 +9,26 @@ pink=`tput setaf 13`
 reset=`tput sgr0`
 DEFAULT_XCODE_VERSION="13.2.1"
 DEFAULT_iOS_EMULATOR_VERSION="13.0"
+ANDROID_INSTALLATION=0
+IOS_INSTALLATION=0
 
 # Input Vars
 if [[ -n "$1" ]]
 then
-    if [[ "$1" == "-m" ]]
+    if [[ "$1" =~ "m" ]]
     then
         USE_EXPRESS_INSTALLATION=0
-    elif [[ "$1" == "-e" ]]
+    elif [[ "$1" =~ "e" ]]
     then
         USE_EXPRESS_INSTALLATION=1
+    fi
+    if [[ "$1" =~ "a" ]]
+    then
+        ANDROID_INSTALLATION=1
+    fi
+    if [[ "$1" =~ "i" ]]
+    then
+        IOS_INSTALLATION=1
     fi
 fi
 
@@ -55,188 +65,206 @@ echo "\n${blue}info ${reset}Installing global dependencies...\n"
 yarn install
 brew install node
 brew install watchman
-brew uninstall --force yarn
-npm i -g yarn
+#brew uninstall --force yarn
+#npm i -g yarn
 brew cleanup
 
 ### ####### ###
 ### ANDROID ###
 ### ####### ###
 
-# Android Dependencies
-echo "\n${blue}info ${reset}Installing Android dependencies...\n"
-brew install --cask adoptopenjdk/openjdk/adoptopenjdk8
-brew install --cask android-studio
-brew install --cask android-sdk
+android_setup () {
 
-# Android Paths
-echo "\n${blue}info ${reset}Adding Android requirements to PATH...\n"
-BREW_HOME=$(brew --prefix)
-ANDROID_HOME=$HOME/Library/Android/sdk
-TEMP_PATH="\$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools"
+    # Android Dependencies
+    echo "\n${blue}info ${reset}Installing Android dependencies...\n"
+    brew install --cask adoptopenjdk/openjdk/adoptopenjdk8
+    brew install --cask android-studio
+    brew install --cask android-sdk
 
-BEGIN_SETUP_TEXT="# BEGIN Android Setup -- Managed by Indeed"
-if [ $(grep -c "$BEGIN_SETUP_TEXT" "$HOME/.zshrc") -eq 0 ]
-then
-    echo "\n${green}- - - BEGIN first time Android Setup - - -${reset}"
-    echo "\n$BEGIN_SETUP_TEXT" >> /$HOME/.zshrc
-    echo "\nexport ANDROID_HOME=$ANDROID_HOME" >> /$HOME/.zshrc
-    echo "\nexport PATH=$TEMP_PATH" >> /$HOME/.zshrc
-    echo "\n# END Android Setup -- Managed by Indeed" >> /$HOME/.zshrc
-    echo "\n${green}- - - END first time Android setup - - -${reset}\n"
-else
-    echo "\n${green}- - - Android setup already complete - - -${reset}\n"
-fi
+    # Android Paths
+    echo "\n${blue}info ${reset}Adding Android requirements to PATH...\n"
+    BREW_HOME=$(brew --prefix)
+    ANDROID_HOME=$HOME/Library/Android/sdk
+    TEMP_PATH="\$PATH:$ANDROID_HOME/emulator:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin:$ANDROID_HOME/platform-tools"
 
-source /$HOME/.zshrc
+    BEGIN_SETUP_TEXT="# BEGIN Android Setup -- Managed by Indeed"
+    if [ $(grep -c "$BEGIN_SETUP_TEXT" "$HOME/.zshrc") -eq 0 ]
+    then
+        echo "\n${green}- - - BEGIN first time Android Setup - - -${reset}"
+        echo "\n$BEGIN_SETUP_TEXT" >> /$HOME/.zshrc
+        echo "\nexport ANDROID_HOME=$ANDROID_HOME" >> /$HOME/.zshrc
+        echo "\nexport PATH=$TEMP_PATH" >> /$HOME/.zshrc
+        echo "\n# END Android Setup -- Managed by Indeed" >> /$HOME/.zshrc
+        echo "\n${green}- - - END first time Android setup - - -${reset}\n"
+    else
+        echo "\n${green}- - - Android setup already complete - - -${reset}\n"
+    fi
 
-mkdir -p $ANDROID_HOME
+    source /$HOME/.zshrc
 
-mv -v $BREW_HOME/share/android-sdk/* $ANDROID_HOME
+    mkdir -p $ANDROID_HOME
 
-# Android Studio CLI
-echo "\n${blue}info ${reset}Installing Android CLI...\n"
-if [[ "$USE_EXPRESS_INSTALLATION" -eq 1 ]]
-then 
-    yes | sdkmanager --install "system-images;android-29;default;x86"
-else 
-    sdkmanager --install "system-images;android-29;default;x86"
-fi
+    mv -v $BREW_HOME/share/android-sdk/* $ANDROID_HOME
 
-sdkmanager "platform-tools" "platforms;android-29" "system-images;android-29;default;x86_64" "system-images;android-29;default;x86"
-sdkmanager "cmdline-tools;latest" "build-tools;29.0.2"
+    # Android Studio CLI
+    echo "\n${blue}info ${reset}Installing Android CLI...\n"
+    if [[ "$USE_EXPRESS_INSTALLATION" -eq 1 ]]
+    then 
+        yes | sdkmanager --install "system-images;android-29;default;x86"
+    else 
+        sdkmanager --install "system-images;android-29;default;x86"
+    fi
 
-if [[ "$USE_EXPRESS_INSTALLATION" -eq 1 ]] 
-then 
-    yes | sdkmanager --licenses
-else 
-    sdkmanager --licenses
-fi
+    sdkmanager "platform-tools" "platforms;android-29" "system-images;android-29;default;x86_64" "system-images;android-29;default;x86"
+    sdkmanager "cmdline-tools;latest" "build-tools;29.0.2"
 
-sdkmanager --update
+    if [[ "$USE_EXPRESS_INSTALLATION" -eq 1 ]] 
+    then 
+        yes | sdkmanager --licenses
+    else 
+        sdkmanager --licenses
+    fi
 
-# AVD Creation
-echo "\n${blue}info ${reset}Creating your Android Virtual Device...\n"
+    sdkmanager --update
 
-AVD_NAME="${PWD##*/}_AVD"
-echo "no" | avdmanager create avd -n $AVD_NAME -k "system-images;android-29;default;x86" -d "pixel_xl" -f
+    # AVD Creation
+    echo "\n${blue}info ${reset}Creating your Android Virtual Device...\n"
 
-echo "\n\n${green}- - - Android Setup Complete! - - -${reset} \n"
+    AVD_NAME="${PWD##*/}_AVD"
+    echo "no" | avdmanager create avd -n $AVD_NAME -k "system-images;android-29;default;x86" -d "pixel_xl" -f
+
+    echo "\n\n${green}- - - Android Setup Complete! - - -${reset} \n"
+
+}
 
 ### ### ###
 ### iOS ###
 ### ### ###
 
-# iOS Dependencies
-echo "\n${blue}info ${reset}Installing iOS dependencies...\n"
+ios_setup() {
 
-# Get Current Versions
-MIN_XCODE_VERSION=$(cat ios/.xcode-version)
-if [[ -z $MIN_XCODE_VERSION ]]
+    # iOS Dependencies
+    echo "\n${blue}info ${reset}Installing iOS dependencies...\n"
+
+    # Get Current Versions
+    MIN_XCODE_VERSION=$(cat ios/.xcode-version)
+    if [[ -z $MIN_XCODE_VERSION ]]
+    then
+        MIN_XCODE_VERSION=$DEFAULT_XCODE_VERSION
+        echo "\n${yellow}Unable to find '.xcode-version' file in 'ios' directory for XCode target. Using default of ${MIN_XCODE_VERSION}. 
+        To set the project's desired XCode version, please create an .xcode-version file in the ios directory.${reset}"
+    else
+        echo "\n${blue}Minimum required XCode Version${reset} => $MIN_XCODE_VERSION"
+    fi
+
+    MIN_IOS_VERSION=$(sed -n -e '/^platform.\+ios/p' ./ios/Podfile | awk '{print $NF}')
+    if [[ -z $MIN_IOS_VERSION ]]
+    then
+        MIN_IOS_VERSION=$DEFAULT_iOS_EMULATOR_VERSION
+        echo "\n${yellow}Unable to find 'platform: ios, xx.xx.xx' definition in Podfile for iOS target. Using default of ${MIN_IOS_VERSION}. 
+        To set the project's minimum iOS version, please add a version by putting 'platform: ios, 'xx.yy.zz'' in your Podfile.${reset}"
+    else
+        echo "\n${blue}Minimum required iOS Version${reset} => $MIN_IOS_VERSION"
+    fi
+
+    MIN_IOS_VERSION=$(echo $MIN_IOS_VERSION | tr -d \')
+
+    INSTALLED_XCODE_VERSIONS=$(xcversion installed | sort -V | awk '{print $NF}')
+    # INSTALLED_XCODE_VERSIONS=$(echo '2.3 3.4 2.1 10.0' | tr " " "\n" | sort -V)
+    echo "\n${blue}Installed XCode Versions${reset} => $INSTALLED_XCODE_VERSIONS"
+
+    MOST_UPDATED_XCODE_VERSION="$(echo $INSTALLED_XCODE_VERSIONS | awk '{print $NF}')"
+    echo "\n${blue}Most updated XCode Version${reset} => $MOST_UPDATED_XCODE_VERSION"
+
+    INSTALLED_XCODE_UP_TO_DATE=1 # FALSE
+    if [[ $(echo "$MIN_XCODE_VERSION\n$MOST_UPDATED_XCODE_VERSION" | sort -V | head -n1) = $MIN_XCODE_VERSION ]]
+    then 
+        INSTALLED_XCODE_UP_TO_DATE=0 # TRUE
+    fi
+
+    # XCode-install (https://github.com/xcpretty/xcode-install)
+    echo "\n${blue}info ${reset}Installing XCode-Install... ${pink}(https://github.com/xcpretty/xcode-install)${reset}"
+    sudo gem install xcode-install
+
+    # XCode Download
+    IN_USE_XCODE_VERSION=$MOST_UPDATED_XCODE_VERSION
+    if [[ $INSTALLED_XCODE_UP_TO_DATE -eq 0 ]]
+    then
+        echo "\n${green}Installed XCode meets project requirements!${reset}"
+    else 
+        echo "\n${yellow}Installed XCode is out of date per project requirements. Downloading most recent stable XCode...${reset}"
+        xcversion install $MIN_XCODE_VERSION
+        IN_USE_XCODE_VERSION=$MIN_XCODE_VERSION
+    fi
+
+    # iOS Cli Tools
+    echo "\n${blue}info ${reset}Installing iOS CLI Tools..."
+    xcversion install-cli-tools
+
+    # iOS Simulator
+    echo "\n${blue}info ${reset}Installing iOS simulator..."
+    xcrun simctl erase all
+
+    INSTALLED_SIMULATORS=$(xcversion simulators | grep -w "(installed)" | grep -Eo '[0-9]+\.?[0-9]?\.?[0-9]?')
+    echo "\n${blue}Installed iOS simulators${reset} => $INSTALLED_SIMULATORS"
+
+    MOST_UPDATED_SIMULATOR_VERSION="$(echo $INSTALLED_SIMULATORS | awk '{print $NF}')"
+    echo "\n${blue}Most updated iOS simulator${reset} => $MOST_UPDATED_SIMULATOR_VERSION"
+
+    INSTALLED_SIMULATOR_UP_TO_DATE=1 # FALSE
+    if [[ $(echo "$MIN_IOS_VERSION\n$MOST_UPDATED_SIMULATOR_VERSION" | sort -V | head -n1) = $MIN_IOS_VERSION ]]
+    then 
+        INSTALLED_SIMULATOR_UP_TO_DATE=0 # TRUE
+    fi
+
+    IN_USE_SIMULATOR_VERSION=$MOST_UPDATED_SIMULATOR_VERSION
+    if [[ $INSTALLED_SIMULATOR_UP_TO_DATE -eq 0 ]]
+    then 
+        echo "\n${green}Installed iOS emulator $IN_USE_SIMULATOR_VERSION meets project requirements!${reset}"
+    else
+        echo "\n${yellow}Installed iOS is out of date per project requirements. Downloading stable iOS simulator version $MIN_IOS_VERSION...${reset}"
+        SIMULATOR_VERSION=$(echo $MIN_IOS_VERSION | tr -d \')
+        SIMULATOR_VERSION="iOS $SIMULATOR_VERSION"
+        xcversion simulators --install="$SIMULATOR_VERSION"
+        IN_USE_SIMULATOR_VERSION=$MIN_IOS_VERSION
+    fi
+
+    # Generate ios package
+    sudo gem install cocoapods
+    cd ios && pod install
+    cd ..
+
+    # Restart iOS Simulator Service
+    echo "\n\n${green}- - - iOS Setup Complete! - - -${reset} \nAs part of the iOS setup, all instances of simulators and xCode must be closed. Closing now..."
+    killall Xcode
+    sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService
+
+}
+
+if [[ $ANDROID_INSTALLATION -eq 1 ]]
 then
-    MIN_XCODE_VERSION=$DEFAULT_XCODE_VERSION
-    echo "\n${yellow}Unable to find '.xcode-version' file in 'ios' directory for XCode target. Using default of ${MIN_XCODE_VERSION}. 
-    To set the project's desired XCode version, please create an .xcode-version file in the ios directory.${reset}"
-else
-    echo "\n${blue}Minimum required XCode Version${reset} => $MIN_XCODE_VERSION"
+    android_setup
 fi
 
-MIN_IOS_VERSION=$(sed -n -e '/^platform.\+ios/p' ./ios/Podfile | awk '{print $NF}')
-if [[ -z $MIN_IOS_VERSION ]]
-then
-    MIN_IOS_VERSION=$DEFAULT_iOS_EMULATOR_VERSION
-    echo "\n${yellow}Unable to find 'platform: ios, xx.xx.xx' definition in Podfile for iOS target. Using default of ${MIN_IOS_VERSION}. 
-    To set the project's minimum iOS version, please add a version by putting 'platform: ios, 'xx.yy.zz'' in your Podfile.${reset}"
-else
-    echo "\n${blue}Minimum required iOS Version${reset} => $MIN_IOS_VERSION"
-fi
-
-MIN_IOS_VERSION=$(echo $MIN_IOS_VERSION | tr -d \')
-
-INSTALLED_XCODE_VERSIONS=$(xcversion installed | sort -V | awk '{print $NF}')
-# INSTALLED_XCODE_VERSIONS=$(echo '2.3 3.4 2.1 10.0' | tr " " "\n" | sort -V)
-echo "\n${blue}Installed XCode Versions${reset} => $INSTALLED_XCODE_VERSIONS"
-
-MOST_UPDATED_XCODE_VERSION="$(echo $INSTALLED_XCODE_VERSIONS | awk '{print $NF}')"
-echo "\n${blue}Most updated XCode Version${reset} => $MOST_UPDATED_XCODE_VERSION"
-
-INSTALLED_XCODE_UP_TO_DATE=1 # FALSE
-if [[ $(echo "$MIN_XCODE_VERSION\n$MOST_UPDATED_XCODE_VERSION" | sort -V | head -n1) = $MIN_XCODE_VERSION ]]
+if [[ $IOS_INSTALLATION -eq 1 ]]
 then 
-    INSTALLED_XCODE_UP_TO_DATE=0 # TRUE
+    ios_setup
 fi
-
-# XCode-install (https://github.com/xcpretty/xcode-install)
-echo "\n${blue}info ${reset}Installing XCode-Install... ${pink}(https://github.com/xcpretty/xcode-install)${reset}"
-sudo gem install xcode-install
-
-# XCode Download
-IN_USE_XCODE_VERSION=$MOST_UPDATED_XCODE_VERSION
-if [[ $INSTALLED_XCODE_UP_TO_DATE -eq 0 ]]
-then
-    echo "\n${green}Installed XCode meets project requirements!${reset}"
-else 
-    echo "\n${yellow}Installed XCode is out of date per project requirements. Downloading most recent stable XCode...${reset}"
-    xcversion install $MIN_XCODE_VERSION
-    IN_USE_XCODE_VERSION=$MIN_XCODE_VERSION
-fi
-
-# iOS Cli Tools
-echo "\n${blue}info ${reset}Installing iOS CLI Tools..."
-xcversion install-cli-tools
-
-# iOS Simulator
-echo "\n${blue}info ${reset}Installing iOS simulator..."
-xcrun simctl erase all
-
-INSTALLED_SIMULATORS=$(xcversion simulators | grep -w "(installed)" | grep -Eo '[0-9]+\.?[0-9]?\.?[0-9]?')
-echo "\n${blue}Installed iOS simulators${reset} => $INSTALLED_SIMULATORS"
-
-MOST_UPDATED_SIMULATOR_VERSION="$(echo $INSTALLED_SIMULATORS | awk '{print $NF}')"
-echo "\n${blue}Most updated iOS simulator${reset} => $MOST_UPDATED_SIMULATOR_VERSION"
-
-INSTALLED_SIMULATOR_UP_TO_DATE=1 # FALSE
-if [[ $(echo "$MIN_IOS_VERSION\n$MOST_UPDATED_SIMULATOR_VERSION" | sort -V | head -n1) = $MIN_IOS_VERSION ]]
-then 
-    INSTALLED_SIMULATOR_UP_TO_DATE=0 # TRUE
-fi
-
-IN_USE_SIMULATOR_VERSION=$MOST_UPDATED_SIMULATOR_VERSION
-if [[ $INSTALLED_SIMULATOR_UP_TO_DATE -eq 0 ]]
-then 
-    echo "\n${green}Installed iOS emulator $IN_USE_SIMULATOR_VERSION meets project requirements!${reset}"
-else
-    echo "\n${yellow}Installed iOS is out of date per project requirements. Downloading stable iOS simulator version $MIN_IOS_VERSION...${reset}"
-    SIMULATOR_VERSION=$(echo $MIN_IOS_VERSION | tr -d \')
-    SIMULATOR_VERSION="iOS $SIMULATOR_VERSION"
-    xcversion simulators --install="$SIMULATOR_VERSION"
-    IN_USE_SIMULATOR_VERSION=$MIN_IOS_VERSION
-fi
-
-# Generate ios package
-sudo gem install cocoapods
-cd ios && pod install
-cd ..
-
-# Restart iOS Simulator Service
-echo "\n\n${green}- - - iOS Setup Complete! - - -${reset} \nAs part of the iOS setup, all instances of simulators and xCode must be closed. Closing now..."
-killall Xcode
-sudo killall -9 com.apple.CoreSimulator.CoreSimulatorService
 
 # Setup Complete
 echo "\n\n${green}- - - Setup Complete! - - -${reset} \n\nYou may start the application on an emulator by running 'yarn run (android/ios)'.\n\n"
 
-#echo "Would you like to start the application on Android or iOS? ${pink}(y/n)${reset}"
-#read -r response
-#if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
-#then
-#    echo "Please select Android or iOS. ${pink}(a/i)${reset}"
-#    read -r response
-#    if [[ "$response" =~ ^([aA])$ ]]
-#    then
-#        yarn run android
-#    elif [[ "$response" =~ ^([iI])$ ]]
-#    then
-#        yarn run ios
-#    fi
-#fi
+echo "Would you like to start the application on Android or iOS? ${pink}(y/n)${reset}"
+read -r response
+if [[ "$response" =~ ^([yY][eE][sS]|[yY])$ ]]
+then
+    echo "Please select Android or iOS. ${pink}(a/i)${reset}"
+    read -r response
+    if [[ "$response" =~ ^([aA])$ ]]
+    then
+        yarn run android
+    elif [[ "$response" =~ ^([iI])$ ]]
+    then
+        yarn run ios
+    fi
+fi
