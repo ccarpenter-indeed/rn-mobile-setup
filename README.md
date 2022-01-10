@@ -44,7 +44,8 @@ To setup your project for React Native mobile development, follow these steps...
 1. Navigate to the root directory of your project.
 2. If you have not already done so, run
     ```
-    brew install ccarpenter-indeed/rn-mobile-setup
+    brew tap ccarpenter-indeed/rn-mobile-setup
+    brew install ccarpenter-indeed/rn-mobile-setup/rn-mobile-setup
     ```
 3. Run the script using
     ```
