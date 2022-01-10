@@ -122,8 +122,8 @@ echo "\n${blue}info ${reset}Installing global dependencies...\n"
 yarn install &> $(output_filter) && echo "Ran yarn install."
 brew install node &> $(output_filter) && echo "Installed node."
 brew install watchman &> $(output_filter) && echo "Installed watchman."
-brew uninstall --force yarn | log
-npm i -g yarn | log
+brew uninstall --force yarn &> $(output_filter)
+npm i -g yarn &> $(output_filter) && echo "Reset yarn."
 brew cleanup &> $(output_filter) && echo "Ran brew cleanup."
 
 ### ####### ###
