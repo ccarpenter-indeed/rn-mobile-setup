@@ -8,6 +8,7 @@ A script to bootstrap React Native development environments targeting mobile.
 - [Usage](#usage)
 - [Support](#support)
 - [Contributing](#contributing)
+- [Installation](#installation)
 
 ## Requirements
 - Your project structure*
@@ -35,9 +36,21 @@ A script to bootstrap React Native development environments targeting mobile.
     - ~5 GB free space for Android Studio and simulators
     - Windows, Linux, or macOS
 
-## Usage
+## Installation 
 
-This brew package will add the mobile setup script to your path, meaning it can be invoked anywhere on your system.  
+1. Homebrew
+    ```
+    brew tap ccarpenter-indeed/rn-mobile-setup
+    brew install ccarpenter-indeed/rn-mobile-setup/rn-mobile-setup
+    ```
+    > Homebrew installation adds the rn_mobile_setup script to your $PATH, meaning it can be invoked anywhere on your system.
+2. NPM
+    ```
+    npm install @ccarpenter-indeed/rn-mobile-setup
+    ```
+    > NPM installation will add a dependency in the node_modules folder for whichever project your are in when you run the installation command. To invoke the script, you will need to link to the path of the script (./node_modules/@ccarpenter-indeed/rn-mobile-setup/rn_mobile_setup)
+    
+## Usage
 
 To setup your project for React Native mobile development, follow these steps...
 
