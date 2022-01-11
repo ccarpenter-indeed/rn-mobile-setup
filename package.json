@@ -1,0 +1,21 @@
+{
+    "dependencies": {},
+    "description": "An npm package to bootstrap React Native development environments targeting mobile.",
+    "devDependencies": {},
+    "keywords": [
+      "mobile",
+      "setup",
+      "react",
+      "native"
+    ],
+    "main": "rn_mobile_setup",
+    "name": "@ccarpenter-indeed/rn-mobile-setup",
+    "publishConfig": {
+      "registry": "https://npm.pkg.github.com/"
+    },
+    "repository": {
+      "url": "git@github.com:ccarpenter-indeed/rn-mobile-setup.git"
+    },
+    "scripts": {},
+    "version": "0.0.9"
+  }
