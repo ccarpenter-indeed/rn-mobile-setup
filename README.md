@@ -55,7 +55,7 @@ To setup your project for React Native mobile development, follow these steps...
     ```
     source rn_mobile_setup -help
     ```
-4. Keep and eye on your terminal. The depending on your installation options the script may prompt you for required information.
+4. Keep an eye on your terminal. Depending on your installation options the script may prompt you for required information.
 
 ## Support
 
